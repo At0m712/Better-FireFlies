@@ -1,0 +1,7 @@
+/time set night
+/time set noon
+/time set 12000
+/time set 13000
+/time set 14000
+/time set 4000
+/time set 14000
