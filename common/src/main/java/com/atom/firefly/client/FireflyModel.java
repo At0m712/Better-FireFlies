@@ -1,7 +1,5 @@
 package com.atom.firefly.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -11,18 +9,17 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import com.atom.firefly.Constants;
 
-public class FireflyModel extends EntityModel<FireflyEntity> {
+public class FireflyModel extends EntityModel<FireflyRenderer.FireflyRenderState> {
 
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly"), "main"
     );
 
-    private final ModelPart root;
     private final ModelPart left_wing;
     private final ModelPart right_wing;
 
     public FireflyModel(ModelPart root) {
-        this.root = root;
+        super(root);
         this.left_wing = root.getChild("left_wing");
         this.right_wing = root.getChild("right_wing");
     }
@@ -80,15 +77,10 @@ public class FireflyModel extends EntityModel<FireflyEntity> {
     }
 
     @Override
-    public void setupAnim(FireflyEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+    public void setupAnim(FireflyRenderer.FireflyRenderState state) {
         float flapSpeed = 1.2F;
-        float angle = Mth.sin(ageInTicks * flapSpeed) * 0.6F;
+        float angle = Mth.sin(state.ageInTicks * flapSpeed) * 0.6F;
         this.left_wing.zRot = angle;
         this.right_wing.zRot = -angle;
-    }
-
-    @Override
-    public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-        this.root.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
     }
 }

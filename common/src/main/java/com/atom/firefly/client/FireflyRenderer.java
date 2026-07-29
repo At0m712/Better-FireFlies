@@ -8,11 +8,12 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
-public class FireflyRenderer extends EntityRenderer<FireflyEntity> {
+public class FireflyRenderer extends EntityRenderer<FireflyEntity, FireflyRenderer.FireflyRenderState> {
     private final FireflyModel model;
 
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/entity/firefly_texture.png");
@@ -27,30 +28,40 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity> {
     }
 
     @Override
-    public ResourceLocation getTextureLocation(FireflyEntity entity) {
-        return TEXTURE;
+    public FireflyRenderState createRenderState() {
+        return new FireflyRenderState();
     }
 
     @Override
-    public void render(FireflyEntity entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    public void extractRenderState(FireflyEntity entity, FireflyRenderState state, float partialTick) {
+        super.extractRenderState(entity, state, partialTick);
+        state.ageInTicks = entity.tickCount + partialTick;
+        state.yRot = Mth.lerp(partialTick, entity.yRotO, entity.getYRot());
+    }
+
+    @Override
+    public void render(FireflyRenderState state, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         poseStack.pushPose();
 
-        poseStack.scale(0.23F, 0.23F, 0.23F);
+        poseStack.scale(0.3F, 0.3F, 0.3F);
         poseStack.scale(-1.0F, -1.0F, 1.0F);
 
-        float yaw = Mth.lerp(partialTick, entity.yRotO, entity.getYRot());
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
+        poseStack.mulPose(Axis.YP.rotationDegrees(state.yRot));
 
-        this.model.setupAnim(entity, 0.0F, 0.0F, entity.tickCount + partialTick, 0.0F, 0.0F);
+        this.model.setupAnim(state);
 
         VertexConsumer solidConsumer = buffer.getBuffer(SOLID_RENDER_TYPE);
         this.model.renderToBuffer(poseStack, solidConsumer, packedLight, OverlayTexture.NO_OVERLAY, -1);
-
 
         VertexConsumer eyesConsumer = buffer.getBuffer(GLOW_RENDER_TYPE);
         this.model.renderToBuffer(poseStack, eyesConsumer, 15728880, OverlayTexture.NO_OVERLAY, -1);
 
         poseStack.popPose();
-        super.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight);
+        super.render(state, poseStack, buffer, packedLight);
+    }
+
+    public static class FireflyRenderState extends EntityRenderState {
+        public float ageInTicks;
+        public float yRot;
     }
 }
