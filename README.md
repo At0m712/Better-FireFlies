@@ -4,10 +4,9 @@ BFF is a client-side mod that add 3D FireFlies during night.
 
 The FireFlies are purely decorative and they create their own dynamic light.
 
-![alt text](2026-07-29_01.07.55.png)
-
-![alt text](2026-07-29_01.07.39.png)
-![alt text](2026-07-29_01.15.21.png)
+<img src="2026-07-29_01.07.55.png" width="500" height="250">
+<img src="2026-07-29_01.07.39.png" width="500" height="250">
+<img src="2026-07-29_01.15.21.png" width="1000" height="500">
 
 # Biome
 
