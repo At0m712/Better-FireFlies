@@ -5,3 +5,21 @@
 /time set 14000
 /time set 4000
 /time set 14000
+/time set 1400d
+/time set 14000d
+/time set 14000
+/weather clear
+/tick
+/tick freeze
+/tick unfreeze
+/fireflylight
+/time set 14000
+/fireflylight
+/tp @s swamp
+/fireflylight
+/time set 14000
+/fireflylight
+/tick freeze
+/fireflylight
+/tick unfreeze
+/tick freeze

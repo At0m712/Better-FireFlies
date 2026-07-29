@@ -2,7 +2,9 @@ package com.atom.firefly.fabric;
 
 import com.atom.firefly.Constants;
 import com.atom.firefly.client.FireflyEntity;
+import com.atom.firefly.fabric.client.FireflyCommand;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -21,5 +23,6 @@ public class FireflyFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         Constants.LOG.info("FireFly 3D (Fabric) initialisé !");
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> FireflyCommand.register(dispatcher));
     }
 }

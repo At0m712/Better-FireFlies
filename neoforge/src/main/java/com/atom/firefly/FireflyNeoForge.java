@@ -1,10 +1,13 @@
 package com.atom.firefly;
 
+import com.atom.firefly.client.FireflyCommand;
+import com.atom.firefly.client.FireflyEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.function.Supplier;
 
@@ -20,5 +23,6 @@ public class FireflyNeoForge {
     public FireflyNeoForge(IEventBus modEventBus) {
         ENTITY_TYPES.register(modEventBus);
         Constants.LOG.info("FireFly 3D (NeoForge) initialisé !");
+        NeoForge.EVENT_BUS.addListener(FireflyCommand::register);
     }
 }

@@ -14,6 +14,8 @@ public class FireflySpawner {
     private static int clientEntityIdCounter = -10000;
 
     public static void trySpawn(Minecraft client, EntityType<FireflyEntity> entityType) {
+        if (FireflyEntity.globalFireflyCount >= 35) return;
+
         ClientLevel level = client.level;
         if (level == null || client.player == null || client.isPaused() || level.random.nextInt(60) != 0) return;
 
@@ -48,15 +50,17 @@ public class FireflySpawner {
 
         if (!isAllowed) return;
 
-        int clusterSize = 1 + level.random.nextInt(3);
+        int clusterSize = 3 + level.random.nextInt(4);
         int baseX = pos.getX();
         int baseY = pos.getY();
         int baseZ = pos.getZ();
 
         for (int i = 0; i < clusterSize; i++) {
-            double finalX = baseX + (level.random.nextDouble() - 0.5) * 8.0;
-            double finalY = baseY + 0.5 + level.random.nextDouble() * 2.5;
-            double finalZ = baseZ + (level.random.nextDouble() - 0.5) * 8.0;
+            if (FireflyEntity.globalFireflyCount >= 35) break;
+
+            double finalX = baseX + (level.random.nextDouble() - 0.5) * 6.0;
+            double finalY = baseY + 0.5 + level.random.nextDouble() * 2.0;
+            double finalZ = baseZ + (level.random.nextDouble() - 0.5) * 6.0;
 
             pos.set(finalX, finalY, finalZ);
 

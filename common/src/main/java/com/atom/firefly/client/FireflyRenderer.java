@@ -35,7 +35,7 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity> {
     public void render(FireflyEntity entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         poseStack.pushPose();
 
-        poseStack.scale(0.3F, 0.3F, 0.3F);
+        poseStack.scale(0.23F, 0.23F, 0.23F);
         poseStack.scale(-1.0F, -1.0F, 1.0F);
 
         float yaw = Mth.lerp(partialTick, entity.yRotO, entity.getYRot());
