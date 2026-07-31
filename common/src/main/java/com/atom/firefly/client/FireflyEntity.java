@@ -107,7 +107,7 @@ public class FireflyEntity extends Entity {
         }
 
         if (this.age % 4 == 0) {
-            if (this.isInWaterOrBubble()) {
+            if (this.isInWater()) {
                 this.vy += 0.05;
             } else {
                 this.mutablePos.set(this.getX(), this.getY() - 1.0, this.getZ());
