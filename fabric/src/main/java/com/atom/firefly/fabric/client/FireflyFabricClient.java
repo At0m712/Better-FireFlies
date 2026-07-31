@@ -37,9 +37,9 @@ public class FireflyFabricClient implements ClientModInitializer {
                         boolean isEnabled = FireflyEntity.enableDynamicLight;
 
                         // Envoie un message dans le chat
-                        String status = isEnabled ? "§aACTIVÉE" : "§cDÉSACTIVÉE";
+                        String status = isEnabled ? "§aENABLE" : "§cDISABLE";
                         context.getSource().sendFeedback(
-                                Component.literal("§e[FireFly] §fLumière dynamique : " + status)
+                                Component.literal("§e[FireFly] §fDynamic Light : " + status)
                         );
 
                         return 1;

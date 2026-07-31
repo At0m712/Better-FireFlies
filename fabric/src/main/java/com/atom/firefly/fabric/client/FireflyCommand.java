@@ -15,9 +15,9 @@ public class FireflyCommand {
                     FireflyEntity.enableDynamicLight = !FireflyEntity.enableDynamicLight;
                     boolean isEnabled = FireflyEntity.enableDynamicLight;
 
-                    String status = isEnabled ? "§aACTIVÉE" : "§cDÉSACTIVÉE";
+                    String status = isEnabled ? "§aENABLE" : "§cDISABLE";
                     context.getSource().sendFeedback(
-                            Component.literal("§e[FireFly] §fLumière dynamique : " + status)
+                            Component.literal("§e[FireFly] §fDynamic Light : " + status)
                     );
 
                     return 1;
