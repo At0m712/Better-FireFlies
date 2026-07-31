@@ -13,13 +13,13 @@ import net.minecraft.world.entity.MobCategory;
 
 public class FireflyFabric implements ModInitializer {
 
-    // NOUVEAUTÉ 1.21.3 : Création d'une clé d'enregistrement officielle (ResourceKey)
+
     public static final ResourceKey<EntityType<?>> FIREFLY_KEY = ResourceKey.create(
             Registries.ENTITY_TYPE,
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly")
     );
 
-    // On utilise la clé FIREFLY_KEY dans le .build() au lieu du texte "firefly"
+
     public static final EntityType<FireflyEntity> FIREFLY = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             FIREFLY_KEY.location(),
@@ -30,6 +30,6 @@ public class FireflyFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // Code d'initialisation principal de Fabric
+
     }
 }
