@@ -2,6 +2,12 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
+
+        maven {
+            name = 'NeoForge'
+            url = uri('https://maven.neoforged.net/releases')
+        }
+
         exclusiveContent {
             forRepository {
                 maven {
@@ -10,7 +16,6 @@ pluginManagement {
                 }
             }
             filter {
-                // LA CORRECTION EST ICI : on inclut les sous-groupes (comme net.fabricmc.unpick)
                 includeGroupAndSubgroups('net.fabricmc')
                 includeGroup('fabric-loom')
             }

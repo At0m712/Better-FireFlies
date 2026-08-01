@@ -2,10 +2,10 @@ package com.atom.firefly.client;
 
 import com.atom.firefly.Constants;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
@@ -40,7 +40,7 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity, FireflyRender
     }
 
     @Override
-    public void render(FireflyRenderState state, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    public void submit(FireflyRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
         poseStack.pushPose();
 
         poseStack.scale(0.3F, 0.3F, 0.3F);
@@ -50,14 +50,15 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity, FireflyRender
 
         this.model.setupAnim(state);
 
-        VertexConsumer solidConsumer = buffer.getBuffer(SOLID_RENDER_TYPE);
-        this.model.renderToBuffer(poseStack, solidConsumer, packedLight, OverlayTexture.NO_OVERLAY, -1);
+        // 1. Soumission du modèle de base
+        collector.submitModel(this.model, state, poseStack, SOLID_RENDER_TYPE, state.lightCoords, OverlayTexture.NO_OVERLAY, -1, null, EntityRenderState.NO_OUTLINE, null);
 
-        VertexConsumer eyesConsumer = buffer.getBuffer(GLOW_RENDER_TYPE);
-        this.model.renderToBuffer(poseStack, eyesConsumer, 15728880, OverlayTexture.NO_OVERLAY, -1);
+        // 2. Soumission de la couche brillante (pleine lumière)
+        collector.submitModel(this.model, state, poseStack, GLOW_RENDER_TYPE, 15728880, OverlayTexture.NO_OVERLAY, -1, null, EntityRenderState.NO_OUTLINE, null);
 
         poseStack.popPose();
-        super.render(state, poseStack, buffer, packedLight);
+
+        super.submit(state, poseStack, collector, camera);
     }
 
     public static class FireflyRenderState extends EntityRenderState {

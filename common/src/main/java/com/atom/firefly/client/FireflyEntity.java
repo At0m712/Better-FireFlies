@@ -159,7 +159,7 @@ public class FireflyEntity extends Entity {
         this.setYRot(smoothYaw);
 
         if (enableDynamicLight) {
-            if (this.level() != null && this.level().isClientSide && this.age % 20 == 0) {
+            if (this.level() != null && this.level().isClientSide() && this.age % 20 == 0) {
                 int currentX = Mth.floor(this.getX());
                 int currentY = Mth.floor(this.getY());
                 int currentZ = Mth.floor(this.getZ());
