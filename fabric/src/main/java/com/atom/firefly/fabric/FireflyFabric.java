@@ -13,7 +13,7 @@ import net.minecraft.world.entity.MobCategory;
 
 public class FireflyFabric implements ModInitializer {
 
-    // On enregistre l'Entité (Taille très petite : 0.2 x 0.2 blocs)
+
     public static final EntityType<FireflyEntity> FIREFLY_ENTITY = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly"),
