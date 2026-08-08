@@ -9,15 +9,31 @@ import net.minecraft.network.chat.Component;
 public class FireflyCommand {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+
+        //dynamic light command
         dispatcher.register(ClientCommandManager.literal("fireflylight")
                 .executes(context -> {
-                    // Toggle light
                     FireflyEntity.enableDynamicLight = !FireflyEntity.enableDynamicLight;
                     boolean isEnabled = FireflyEntity.enableDynamicLight;
 
                     String status = isEnabled ? "§aENABLE" : "§cDISABLE";
                     context.getSource().sendFeedback(
-                            Component.literal("§e[FireFly] §fDynamic Light : " + status)
+                            Component.literal("§e[FireFly] §fDynamic light : " + status)
+                    );
+
+                    return 1;
+                })
+        );
+
+        // particle command
+        dispatcher.register(ClientCommandManager.literal("fireflyparticles")
+                .executes(context -> {
+                    FireflyEntity.enableParticles = !FireflyEntity.enableParticles;
+                    boolean isEnabled = FireflyEntity.enableParticles;
+
+                    String status = isEnabled ? "§aENABLE" : "§cDISABLE";
+                    context.getSource().sendFeedback(
+                            Component.literal("§e[FireFly] §fParticle: " + status)
                     );
 
                     return 1;

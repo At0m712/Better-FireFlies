@@ -24,3 +24,4 @@
 /tick unfreeze
 /tick freeze
 /fireflylight
+/fireflyparticles
