@@ -14,8 +14,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+
 
 public class FireflyEntity extends Entity {
 
@@ -217,13 +216,7 @@ public class FireflyEntity extends Entity {
     }
 
 
-    @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {}
-
-    // update for 1.21.6
-    @Override
-    protected void readAdditionalSaveData(ValueInput input) {}
-
-    @Override
-    protected void addAdditionalSaveData(ValueOutput output) {}
+    @Override protected void defineSynchedData(SynchedEntityData.Builder builder) {}
+    @Override protected void readAdditionalSaveData(CompoundTag tag) {}
+    @Override protected void addAdditionalSaveData(CompoundTag tag) {}
 }

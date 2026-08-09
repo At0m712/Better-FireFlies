@@ -30,3 +30,5 @@
 /time set 14000
 /fireflyparticles
 /fireflylight
+/fireflyparticles
+/fireflylight
