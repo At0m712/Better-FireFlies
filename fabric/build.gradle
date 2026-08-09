@@ -40,7 +40,7 @@ publishMods {
     file = jar.archiveFile
     changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
     type = STABLE
-    version = "1.0.1-1.21.9"
+    version = "1.0.1-1.21.6"
     modLoaders.add("fabric")
     modLoaders.add("quilt")
 
@@ -51,8 +51,8 @@ publishMods {
         changelogType = "markdown"
 
         minecraftVersionRange {
-            start = "1.21.9"
-            end = "1.21.10"
+            start = "1.21.6"
+            end = "1.21.8"
         }
 
         client = true
@@ -61,13 +61,13 @@ publishMods {
     }
 
     modrinth {
-        displayName = "Better FireFlies 1.0.1-1.21.9}"
+        displayName = "Better FireFlies 1.0.1-1.21.6}"
         projectId = "WpcP0H59"
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
 
         minecraftVersionRange {
-            start = "1.21.9"
-            end = "1.21.10"
+            start = "1.21.6"
+            end = "1.21.8"
         }
 
         requires("fabric-api")

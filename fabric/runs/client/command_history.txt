@@ -27,3 +27,6 @@
 /time set 14000
 /fireflylight
 /fireflyparticles
+/time set 14000
+/fireflyparticles
+/fireflylight
