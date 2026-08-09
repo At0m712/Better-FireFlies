@@ -5,14 +5,14 @@ import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import com.atom.firefly.Constants;
 
 public class FireflyModel extends EntityModel<FireflyRenderer.FireflyRenderState> {
 
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
-            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "firefly"), "main"
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly"), "main"
     );
 
     private final ModelPart left_wing;
