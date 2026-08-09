@@ -13,16 +13,16 @@ import net.minecraft.world.entity.MobCategory;
 
 public class FireflyFabric implements ModInitializer {
 
-    private static final Identifier FIREFLY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "firefly");
-
+    // 1. Création de la clé d'entité obligatoire pour la 1.21.3+
     public static final ResourceKey<EntityType<?>> FIREFLY_KEY = ResourceKey.create(
             Registries.ENTITY_TYPE,
-            FIREFLY_ID
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "firefly")
     );
 
+    // 2. On renomme bien la variable en "FIREFLY" pour que le Client la trouve !
     public static final EntityType<FireflyEntity> FIREFLY = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
-            FIREFLY_ID,
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "firefly"),
             EntityType.Builder.<FireflyEntity>of(FireflyEntity::new, MobCategory.AMBIENT)
                     .sized(0.2F, 0.2F)
                     .build(FIREFLY_KEY)
@@ -30,6 +30,9 @@ public class FireflyFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        Constants.LOG.info("FireFly 3D (Fabric) initialisé !");
 
+        // J'ai retiré l'enregistrement de la commande d'ici pour éviter un crash serveur.
+        // C'est désormais FireflyFabricClient.java qui s'en occupe en toute sécurité !
     }
 }

@@ -2,10 +2,12 @@ package com.atom.firefly.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
@@ -18,6 +20,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 public class FireflyEntity extends Entity {
 
     public static boolean enableDynamicLight = true;
+    public static boolean enableParticles = true; // Ajout du bouton on/off pour les particules
     public static int globalFireflyCount = 0;
 
     private int age = 0;
@@ -158,6 +161,19 @@ public class FireflyEntity extends Entity {
         float smoothYaw = Mth.approachDegrees(this.getYRot(), targetYaw, 10.0F);
         this.setYRot(smoothYaw);
 
+        // Effet de particules beaucoup plus discret et soumis à la variable enableParticles
+        if (enableParticles && this.level().isClientSide() && this.random.nextFloat() < 0.05F) { // 5% de chance
+            double px = this.getX() + (this.random.nextDouble() - 0.5) * 0.1;
+            double py = this.getY() + (this.random.nextDouble() - 0.5) * 0.1 + 0.1;
+            double pz = this.getZ() + (this.random.nextDouble() - 0.5) * 0.1;
+
+            this.level().addParticle(
+                    ParticleTypes.GLOW, // Particule douce et statique
+                    px, py, pz,
+                    0.0D, 0.0D, 0.0D // Ne bouge pas, reste sur place
+            );
+        }
+
         if (enableDynamicLight) {
             if (this.level() != null && this.level().isClientSide() && this.age % 20 == 0) {
                 int currentX = Mth.floor(this.getX());
@@ -192,10 +208,14 @@ public class FireflyEntity extends Entity {
         }
     }
 
+    // NOUVEAUTÉ : La méthode obligatoire pour gérer les dégâts côté serveur (1.21.3)
     @Override
-    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+    public boolean hurtServer(ServerLevel level, DamageSource damageSource, float amount) {
+        // On retourne 'false' pour dire que l'entité ne prend pas de dégâts.
+        // (Si tu veux qu'elle disparaisse en un coup, tu pourrais mettre "this.discard(); return true;")
         return false;
     }
+
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {}
