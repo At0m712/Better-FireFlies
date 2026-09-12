@@ -37,8 +37,10 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity, FireflyRender
         super.extractRenderState(entity, state, partialTick);
         state.ageInTicks = entity.tickCount + partialTick;
         state.yRot = Mth.lerp(partialTick, entity.yRotO, entity.getYRot());
+        // Breathing pulse effect: oscillates smoothly between 0.55 and 1.0
+        float pulse = (Mth.sin(state.ageInTicks * 0.15F) + 1.0F) * 0.5F;
+        state.glowAlpha = 0.55F + pulse * 0.45F;
     }
-
 
     public void render(FireflyRenderState state, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         poseStack.pushPose();
@@ -53,8 +55,12 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity, FireflyRender
         VertexConsumer solidConsumer = buffer.getBuffer(SOLID_RENDER_TYPE);
         this.model.renderToBuffer(poseStack, solidConsumer, packedLight, OverlayTexture.NO_OVERLAY, -1);
 
+        // Render emissive glowing tail with smooth pulsating intensity
+        int alpha = (int) (state.glowAlpha * 255.0F);
+        int glowColor = (alpha << 24) | 0x00FFFFFF;
+
         VertexConsumer eyesConsumer = buffer.getBuffer(GLOW_RENDER_TYPE);
-        this.model.renderToBuffer(poseStack, eyesConsumer, 15728880, OverlayTexture.NO_OVERLAY, -1);
+        this.model.renderToBuffer(poseStack, eyesConsumer, 15728880, OverlayTexture.NO_OVERLAY, glowColor);
 
         poseStack.popPose();
         super.render(state, poseStack, buffer, packedLight);
@@ -63,5 +69,6 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity, FireflyRender
     public static class FireflyRenderState extends EntityRenderState {
         public float ageInTicks;
         public float yRot;
+        public float glowAlpha = 1.0F;
     }
 }

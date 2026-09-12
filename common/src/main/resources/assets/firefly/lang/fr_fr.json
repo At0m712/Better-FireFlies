@@ -1,0 +1,7 @@
+{
+  "entity.firefly.firefly": "Luciole",
+  "command.firefly.light.enabled": "Lumière dynamique : ACTIVÉE",
+  "command.firefly.light.disabled": "Lumière dynamique : DÉSACTIVÉE",
+  "command.firefly.particles.enabled": "Particules : ACTIVÉES",
+  "command.firefly.particles.disabled": "Particules : DÉSACTIVÉES"
+}

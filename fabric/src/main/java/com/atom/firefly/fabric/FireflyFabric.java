@@ -1,5 +1,6 @@
 package com.atom.firefly.fabric;
 
+import com.atom.firefly.CommonClass;
 import com.atom.firefly.Constants;
 import com.atom.firefly.client.FireflyEntity;
 import net.fabricmc.api.ModInitializer;
@@ -30,9 +31,7 @@ public class FireflyFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        Constants.LOG.info("FireFly 3D (Fabric) initialisé !");
-
-        // J'ai retiré l'enregistrement de la commande d'ici pour éviter un crash serveur.
-        // C'est désormais FireflyFabricClient.java qui s'en occupe en toute sécurité !
+        CommonClass.init();
+        Constants.LOG.info("FireFly 3D (Fabric) initialized!");
     }
 }

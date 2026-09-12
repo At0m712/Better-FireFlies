@@ -1,30 +1,22 @@
 package com.atom.firefly.client;
 
-import net.minecraft.client.Minecraft;
+import com.atom.firefly.config.FireflyConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.state.BlockState;
-
 
 public class FireflyEntity extends Entity {
 
-    public static boolean enableDynamicLight = true;
-    public static boolean enableParticles = true; // Ajout du bouton on/off pour les particules
-    public static int globalFireflyCount = 0;
-
     private int age = 0;
     private final int lifetime;
-    private BlockPos lastLightPos = null;
     private BlockPos homePos = null;
 
     private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
@@ -36,14 +28,6 @@ public class FireflyEntity extends Entity {
         super(type, level);
         this.noPhysics = true;
         this.lifetime = 600 + level.random.nextInt(600);
-        globalFireflyCount++;
-    }
-
-    @Override
-    public void remove(RemovalReason reason) {
-        super.remove(reason);
-        globalFireflyCount--;
-        this.removeLight();
     }
 
     private void pickNewTarget() {
@@ -56,7 +40,7 @@ public class FireflyEntity extends Entity {
             this.mutablePos.set(proposedX, this.getY() + 2.0, proposedZ);
             boolean foundGround = false;
 
-            for (int j = 0; j < 8; j++) {
+            for (int j = 0; j < 6; j++) {
                 if (!this.level().getBlockState(this.mutablePos).isAir()) {
                     foundGround = true;
                     break;
@@ -66,7 +50,7 @@ public class FireflyEntity extends Entity {
 
             if (foundGround) {
                 double groundY = this.mutablePos.getY() + 1.0;
-                double proposedY = groundY + 0.5 + (this.random.nextDouble() * 3.5);
+                double proposedY = groundY + 0.5 + (this.random.nextDouble() * 3.0);
 
                 this.mutablePos.set(proposedX, proposedY, proposedZ);
                 BlockState targetState = this.level().getBlockState(this.mutablePos);
@@ -81,7 +65,7 @@ public class FireflyEntity extends Entity {
         }
 
         this.targetX = this.homePos.getX();
-        this.targetY = this.getY() - 1.5;
+        this.targetY = this.getY() - 1.0;
         this.targetZ = this.homePos.getZ();
     }
 
@@ -102,13 +86,15 @@ public class FireflyEntity extends Entity {
             return;
         }
 
+        // Despawn safely if no player is nearby (uses Level API, no direct Minecraft.getInstance())
         if (this.age % 40 == 0) {
-            if (Minecraft.getInstance().player != null && this.distanceToSqr(Minecraft.getInstance().player) > 64 * 64) {
+            if (this.level().getNearestPlayer(this, 64.0D) == null) {
                 this.discard();
                 return;
             }
         }
 
+        // Vertical obstacle and water checking
         if (this.age % 4 == 0) {
             if (this.isInWater()) {
                 this.vy += 0.05;
@@ -160,61 +146,24 @@ public class FireflyEntity extends Entity {
         float smoothYaw = Mth.approachDegrees(this.getYRot(), targetYaw, 10.0F);
         this.setYRot(smoothYaw);
 
-        // Effet de particules beaucoup plus discret et soumis à la variable enableParticles
-        if (enableParticles && this.level().isClientSide() && this.random.nextFloat() < 0.05F) { // 5% de chance
+        // Ambient glow particle effect (controlled by persistent config)
+        if (FireflyConfig.get().enableParticles && this.level().isClientSide() && this.random.nextFloat() < 0.05F) {
             double px = this.getX() + (this.random.nextDouble() - 0.5) * 0.1;
             double py = this.getY() + (this.random.nextDouble() - 0.5) * 0.1 + 0.1;
             double pz = this.getZ() + (this.random.nextDouble() - 0.5) * 0.1;
 
             this.level().addParticle(
-                    ParticleTypes.GLOW, // Particule douce et statique
+                    ParticleTypes.GLOW,
                     px, py, pz,
-                    0.0D, 0.0D, 0.0D // Ne bouge pas, reste sur place
+                    0.0D, 0.0D, 0.0D
             );
         }
-
-        if (enableDynamicLight) {
-            if (this.level() != null && this.level().isClientSide() && this.age % 20 == 0) {
-                int currentX = Mth.floor(this.getX());
-                int currentY = Mth.floor(this.getY());
-                int currentZ = Mth.floor(this.getZ());
-
-                if (this.lastLightPos == null || this.lastLightPos.getX() != currentX || this.lastLightPos.getY() != currentY || this.lastLightPos.getZ() != currentZ) {
-                    this.removeLight();
-
-                    BlockPos newPos = new BlockPos(currentX, currentY, currentZ);
-                    BlockState currentState = this.level().getBlockState(newPos);
-
-                    if (currentState.isAir()) {
-                        BlockState lightState = Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, 9);
-                        this.level().setBlock(newPos, lightState, 18);
-                        this.lastLightPos = newPos;
-                    }
-                }
-            }
-        } else {
-            this.removeLight();
-        }
     }
 
-    private void removeLight() {
-        if (this.level() != null && this.lastLightPos != null) {
-            BlockState state = this.level().getBlockState(this.lastLightPos);
-            if (state.is(Blocks.LIGHT)) {
-                this.level().setBlock(this.lastLightPos, Blocks.AIR.defaultBlockState(), 18);
-            }
-            this.lastLightPos = null;
-        }
-    }
-
-    // NOUVEAUTÉ : La méthode obligatoire pour gérer les dégâts côté serveur (1.21.3)
     @Override
     public boolean hurtServer(ServerLevel level, DamageSource damageSource, float amount) {
-        // On retourne 'false' pour dire que l'entité ne prend pas de dégâts.
-        // (Si tu veux qu'elle disparaisse en un coup, tu pourrais mettre "this.discard(); return true;")
         return false;
     }
-
 
     @Override protected void defineSynchedData(SynchedEntityData.Builder builder) {}
     @Override protected void readAdditionalSaveData(CompoundTag tag) {}

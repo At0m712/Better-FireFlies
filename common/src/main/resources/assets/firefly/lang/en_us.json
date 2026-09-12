@@ -1,0 +1,7 @@
+{
+  "entity.firefly.firefly": "Firefly",
+  "command.firefly.light.enabled": "Dynamic light : ENABLED",
+  "command.firefly.light.disabled": "Dynamic light : DISABLED",
+  "command.firefly.particles.enabled": "Particles : ENABLED",
+  "command.firefly.particles.disabled": "Particles : DISABLED"
+}
