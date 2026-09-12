@@ -1,6 +1,7 @@
 plugins {
     id 'multiloader-loader'
     id 'fabric-loom'
+    id "me.modmuss50.mod-publish-plugin" version "2.0.0"
 }
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -33,5 +34,36 @@ loom {
             ideConfigGenerated(true)
             runDir('runs/server')
         }
+    }
+}
+publishMods {
+    file = remapJar.archiveFile
+    changelog = rootProject.file("CHANGELOG.md").text
+    type = STABLE
+    version = "${version}"
+    modLoaders.add("fabric")
+    modLoaders.add("quilt")
+
+    curseforge {
+        displayName = file.map { it.asFile.name }
+        projectId = property("curseforge_id")
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        changelogType = "markdown"
+
+        minecraftVersions.addAll(property("publish_minecraft_versions").split(",") as List<String>)
+
+        client = true
+        server = false
+        requires("fabric-api")
+    }
+
+    modrinth {
+        displayName = "Better FireFlies ${version}"
+        projectId = property("modrinth_id")
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+
+        minecraftVersions.addAll(property("publish_minecraft_versions").split(",") as List<String>)
+
+        requires("fabric-api")
     }
 }
