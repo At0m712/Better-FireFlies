@@ -1,13 +1,15 @@
 {
     "schemaVersion": 1,
     "id": "firefly",
-    "version": "1.0.0",
-    "name": "FireFly",
-    "description": "Un mod client-side qui ajoute des lucioles en 3D.",
+    "version": "${version}",
+    "name": "Better FireFlies",
+    "description": "A client-side ambient mod adding decorative 3D fireflies with glowing bioluminescence and smooth dynamic light support.",
     "authors": [
-        "atom"
+        "Atom"
     ],
-    "contact": {},
+    "contact": {
+        "homepage": "https://modrinth.com/mod/firefly"
+    },
     "license": "MIT",
     "icon": "assets/firefly/icon.png",
     "environment": "*",

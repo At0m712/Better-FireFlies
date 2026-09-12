@@ -16,6 +16,12 @@ neoForge {
     }
 }
 
+repositories {
+    maven {
+        name = "Minecraft Libraries"
+        url = "https://libraries.minecraft.net/"
+    }
+}
 dependencies {
     compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
     // fabric and neoforge both bundle mixinextras, so it is safe to use it in common

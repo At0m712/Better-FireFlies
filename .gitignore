@@ -22,8 +22,28 @@ bin/
 .DS_Store
 Thumbs.db
 
-# Logs et Run
+# Minecraft Run directories (all loaders)
 run/
+runs/
+**/run/
+**/runs/
+
+# Logs, Dumps & Reports
 logs/
+**/logs/
 crash-reports/
+**/crash-reports/
 usercache.json
+**/usercache.json
+usernamecache.json
+**/usernamecache.json
+command_history.txt
+**/command_history.txt
+**/debug/
+*.log
+
+# Minecraft Saves & Chunks
+*.mca
+*.dat
+*.dat_old
+*.lock
