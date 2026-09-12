@@ -21,6 +21,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class FireflyEntity extends Entity {
@@ -28,6 +30,7 @@ public class FireflyEntity extends Entity {
     private int age = 0;
     private final int lifetime;
     private BlockPos homePos = null;
+    private BlockPos lastLightPos = null;
     private FireflyVariant variant = FireflyVariant.FOREST;
 
     private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
@@ -166,6 +169,11 @@ public class FireflyEntity extends Entity {
         float smoothYaw = Mth.approachDegrees(this.getYRot(), targetYaw, 10.0F);
         this.setYRot(smoothYaw);
 
+        // Ambient dynamic light on the ground and surroundings (controlled by config)
+        if (this.age % 2 == 0) {
+            this.updateDynamicLight();
+        }
+
         // Ambient glow particle effect (controlled by persistent config)
         if (FireflyConfig.get().enableParticles && this.level().isClientSide() && this.random.nextFloat() < 0.05F) {
             double px = this.getX() + (this.random.nextDouble() - 0.5) * 0.1;
@@ -178,6 +186,45 @@ public class FireflyEntity extends Entity {
                     0.0D, 0.0D, 0.0D
             );
         }
+    }
+
+    private void updateDynamicLight() {
+        if (!FireflyConfig.get().enableDynamicLight) {
+            this.clearDynamicLight();
+            return;
+        }
+
+        BlockPos currentPos = this.blockPosition();
+        if (currentPos.equals(this.lastLightPos)) {
+            return;
+        }
+
+        this.clearDynamicLight();
+
+        if (this.level().getBlockState(currentPos).isAir()) {
+            this.level().setBlock(currentPos, Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, 8), 3);
+            this.lastLightPos = currentPos.immutable();
+        }
+    }
+
+    private void clearDynamicLight() {
+        if (this.lastLightPos != null) {
+            if (this.level().getBlockState(this.lastLightPos).is(Blocks.LIGHT)) {
+                this.level().setBlock(this.lastLightPos, Blocks.AIR.defaultBlockState(), 3);
+            }
+            this.lastLightPos = null;
+        }
+    }
+
+    @Override
+    public boolean isPickable() {
+        return true;
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        this.clearDynamicLight();
+        super.remove(reason);
     }
 
     @Override

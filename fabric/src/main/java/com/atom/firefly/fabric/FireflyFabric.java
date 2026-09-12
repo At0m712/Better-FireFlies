@@ -4,25 +4,35 @@ import com.atom.firefly.CommonClass;
 import com.atom.firefly.Constants;
 import com.atom.firefly.block.FireflyJarBlock;
 import com.atom.firefly.client.FireflyEntity;
+import com.atom.firefly.fabric.network.CatchFireflyPayload;
 import com.atom.firefly.item.FireflyJarItem;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class FireflyFabric implements ModInitializer {
 
-    // 1. Création de la clé d'entité obligatoire pour la 1.21.3+
+    // 1. Clé et type d'entité luciole
     public static final ResourceKey<EntityType<?>> FIREFLY_KEY = ResourceKey.create(
             Registries.ENTITY_TYPE,
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly")
@@ -32,11 +42,18 @@ public class FireflyFabric implements ModInitializer {
             BuiltInRegistries.ENTITY_TYPE,
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly"),
             EntityType.Builder.<FireflyEntity>of(FireflyEntity::new, MobCategory.AMBIENT)
-                    .sized(0.2F, 0.2F)
+                    .sized(0.35F, 0.35F)
                     .build(FIREFLY_KEY)
     );
 
-    // 2. Clé et enregistrement du Bocal de luciole
+    // 2. Particule 2D de luciole
+    public static final SimpleParticleType FIREFLY_PARTICLE = Registry.register(
+            BuiltInRegistries.PARTICLE_TYPE,
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly"),
+            net.fabricmc.fabric.api.particle.v1.FabricParticleTypes.simple()
+    );
+
+    // 3. Clé et enregistrement du Bocal de luciole
     public static final ResourceKey<Block> FIREFLY_JAR_BLOCK_KEY = ResourceKey.create(
             Registries.BLOCK,
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly_jar")
@@ -67,6 +84,25 @@ public class FireflyFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         CommonClass.init();
+
+        // Réseau : enregistrement du paquet pour capturer une luciole
+        PayloadTypeRegistry.playC2S().register(CatchFireflyPayload.TYPE, CatchFireflyPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(CatchFireflyPayload.TYPE, (payload, context) -> {
+            ServerPlayer player = context.player();
+            InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+            ItemStack held = player.getItemInHand(hand);
+            if (held.is(Items.GLASS_BOTTLE)) {
+                if (!player.getAbilities().instabuild) {
+                    held.shrink(1);
+                }
+                ItemStack jarStack = new ItemStack(FIREFLY_JAR_ITEM);
+                if (!player.getInventory().add(jarStack)) {
+                    player.drop(jarStack, false);
+                }
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.BOTTLE_FILL, SoundSource.PLAYERS, 1.0F, 1.0F);
+            }
+        });
 
         // Ajout à l'onglet inventaire créatif des blocs fonctionnels
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(entries -> {

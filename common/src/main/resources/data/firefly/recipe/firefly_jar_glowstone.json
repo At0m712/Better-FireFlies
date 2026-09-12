@@ -4,12 +4,12 @@
   "key": {
     "S": "#minecraft:wooden_slabs",
     "B": "minecraft:glass_bottle",
-    "T": "minecraft:torch"
+    "G": "minecraft:glowstone_dust"
   },
   "pattern": [
     "S",
     "B",
-    "T"
+    "G"
   ],
   "result": {
     "count": 1,

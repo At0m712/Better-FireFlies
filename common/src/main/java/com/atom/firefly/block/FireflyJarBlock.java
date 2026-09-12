@@ -1,7 +1,13 @@
 package com.atom.firefly.block;
 
+import com.atom.firefly.Constants;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -36,12 +42,24 @@ public class FireflyJarBlock extends LanternBlock {
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        if (random.nextInt(3) == 0) {
-            double yOffset = state.getValue(HANGING) ? 0.45D : 0.35D;
-            double px = pos.getX() + 0.5D + (random.nextDouble() - 0.5D) * 0.3D;
-            double py = pos.getY() + yOffset + (random.nextDouble() - 0.5D) * 0.25D;
-            double pz = pos.getZ() + 0.5D + (random.nextDouble() - 0.5D) * 0.3D;
-            level.addParticle(ParticleTypes.GLOW, px, py, pz, 0.0D, 0.0D, 0.0D);
+        double yCenter = state.getValue(HANGING) ? 0.48D : 0.32D;
+
+        ParticleOptions particleToSpawn = ParticleTypes.GLOW;
+        ParticleType<?> customType = BuiltInRegistries.PARTICLE_TYPE.getOptional(
+                ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly")
+        ).orElse(null);
+
+        if (customType instanceof SimpleParticleType simpleParticle) {
+            particleToSpawn = simpleParticle;
+        }
+
+        // Spawn 1 to 3 animated 2D firefly particles inside the glass jar
+        int count = 1 + random.nextInt(2);
+        for (int i = 0; i < count; i++) {
+            double px = pos.getX() + 0.5D + (random.nextDouble() - 0.5D) * 0.28D;
+            double py = pos.getY() + yCenter + (random.nextDouble() - 0.5D) * 0.20D;
+            double pz = pos.getZ() + 0.5D + (random.nextDouble() - 0.5D) * 0.28D;
+            level.addParticle(particleToSpawn, px, py, pz, 0.0D, 0.0D, 0.0D);
         }
     }
 }
