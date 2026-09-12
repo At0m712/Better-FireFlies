@@ -37,8 +37,8 @@ loom {
     }
 }
 publishMods {
-    file = jar.archiveFile
-    changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
+    file = remapJar.archiveFile
+    changelog = rootProject.file("CHANGELOG.md").text
     type = STABLE
     version = "${version}"
     modLoaders.add("fabric")
@@ -46,14 +46,11 @@ publishMods {
 
     curseforge {
         displayName = file.map { it.asFile.name }
-        projectId = "1629782"
+        projectId = property("curseforge_id")
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
         changelogType = "markdown"
 
-        minecraftVersionRange {
-            start = "${minecraft_version}"
-            end = "${minecraft_version}"
-        }
+        minecraftVersions.addAll(property("publish_minecraft_versions").split(",") as List<String>)
 
         client = true
         server = false
@@ -62,13 +59,10 @@ publishMods {
 
     modrinth {
         displayName = "Better FireFlies ${version}"
-        projectId = "WpcP0H59"
+        projectId = property("modrinth_id")
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
 
-        minecraftVersionRange {
-            start = "${minecraft_version}"
-            end = "${minecraft_version}"
-        }
+        minecraftVersions.addAll(property("publish_minecraft_versions").split(",") as List<String>)
 
         requires("fabric-api")
     }
