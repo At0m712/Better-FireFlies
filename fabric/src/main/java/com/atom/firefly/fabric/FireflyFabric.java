@@ -1,28 +1,97 @@
 package com.atom.firefly.fabric;
 
+import com.atom.firefly.CommonClass;
 import com.atom.firefly.Constants;
+import com.atom.firefly.block.FireflyJarBlock;
 import com.atom.firefly.client.FireflyEntity;
-import com.atom.firefly.fabric.client.FireflyCommand;
+import com.atom.firefly.fabric.network.CatchFireflyPayload;
+import com.atom.firefly.item.FireflyJarItem;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class FireflyFabric implements ModInitializer {
 
-
+    // 1. Enregistrement de l'entite luciole
     public static final EntityType<FireflyEntity> FIREFLY_ENTITY = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly"),
-            EntityType.Builder.<FireflyEntity>of(FireflyEntity::new, MobCategory.AMBIENT).sized(0.2F, 0.2F).build("firefly")
+            EntityType.Builder.<FireflyEntity>of(FireflyEntity::new, MobCategory.AMBIENT)
+                    .sized(0.35F, 0.35F)
+                    .build("firefly")
+    );
+    public static final EntityType<FireflyEntity> FIREFLY = FIREFLY_ENTITY;
+
+    // 2. Particule 2D de luciole
+    public static final SimpleParticleType FIREFLY_PARTICLE = Registry.register(
+            BuiltInRegistries.PARTICLE_TYPE,
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly"),
+            net.fabricmc.fabric.api.particle.v1.FabricParticleTypes.simple()
+    );
+
+    // 3. Enregistrement du Bocal de luciole
+    public static final Block FIREFLY_JAR_BLOCK = Registry.register(
+            BuiltInRegistries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly_jar"),
+            new FireflyJarBlock(BlockBehaviour.Properties.of()
+                    .lightLevel(state -> 12)
+                    .noOcclusion()
+                    .sound(SoundType.GLASS)
+                    .strength(0.3F))
+    );
+
+    public static final Item FIREFLY_JAR_ITEM = Registry.register(
+            BuiltInRegistries.ITEM,
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly_jar"),
+            new FireflyJarItem(FIREFLY_JAR_BLOCK, new Item.Properties())
     );
 
     @Override
     public void onInitialize() {
-        Constants.LOG.info("FireFly 3D (Fabric) initialisé !");
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> FireflyCommand.register(dispatcher));
+        CommonClass.init();
+
+        // Reseau : enregistrement du paquet pour capturer une luciole
+        PayloadTypeRegistry.playC2S().register(CatchFireflyPayload.TYPE, CatchFireflyPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(CatchFireflyPayload.TYPE, (payload, context) -> {
+            ServerPlayer player = context.player();
+            InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+            ItemStack held = player.getItemInHand(hand);
+            if (held.is(Items.GLASS_BOTTLE)) {
+                if (!player.getAbilities().instabuild) {
+                    held.shrink(1);
+                }
+                ItemStack jarStack = new ItemStack(FIREFLY_JAR_ITEM);
+                if (!player.getInventory().add(jarStack)) {
+                    player.drop(jarStack, false);
+                }
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.BOTTLE_FILL, SoundSource.PLAYERS, 1.0F, 1.0F);
+            }
+        });
+
+        // Ajout a l'onglet inventaire creatif des blocs fonctionnels
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(entries -> {
+            entries.accept(FIREFLY_JAR_ITEM);
+        });
+
+        Constants.LOG.info("FireFly 3D Fabric 1.21.1 initialized!");
     }
 }
