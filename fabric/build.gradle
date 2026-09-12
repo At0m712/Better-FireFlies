@@ -40,7 +40,7 @@ publishMods {
     file = remapJar.archiveFile
     changelog = rootProject.file("CHANGELOG.md").text
     type = STABLE
-    version = "${version}"
+    version = "${project.property('version')}"
     modLoaders.add("fabric")
     modLoaders.add("quilt")
 
@@ -58,7 +58,7 @@ publishMods {
     }
 
     modrinth {
-        displayName = "Better FireFlies ${version}"
+        displayName = "Better FireFlies ${project.property('version')}"
         projectId = property("modrinth_id")
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
 
