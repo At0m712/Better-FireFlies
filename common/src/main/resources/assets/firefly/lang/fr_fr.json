@@ -3,5 +3,7 @@
   "command.firefly.light.enabled": "Lumière dynamique : ACTIVÉE",
   "command.firefly.light.disabled": "Lumière dynamique : DÉSACTIVÉE",
   "command.firefly.particles.enabled": "Particules : ACTIVÉES",
-  "command.firefly.particles.disabled": "Particules : DÉSACTIVÉES"
+  "command.firefly.particles.disabled": "Particules : DÉSACTIVÉES",
+  "block.firefly.firefly_jar": "Luciole en bocal",
+  "item.firefly.firefly_jar": "Luciole en bocal"
 }

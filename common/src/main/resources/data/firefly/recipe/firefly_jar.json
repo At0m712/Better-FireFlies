@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "decorations",
+  "key": {
+    "S": {
+      "tag": "minecraft:wooden_slabs"
+    },
+    "B": {
+      "item": "minecraft:glass_bottle"
+    },
+    "G": [
+      {
+        "item": "minecraft:glowstone_dust"
+      },
+      {
+        "item": "minecraft:glow_berries"
+      },
+      {
+        "item": "minecraft:torch"
+      }
+    ]
+  },
+  "pattern": [
+    "S",
+    "B",
+    "G"
+  ],
+  "result": {
+    "count": 1,
+    "id": "firefly:firefly_jar"
+  }
+}

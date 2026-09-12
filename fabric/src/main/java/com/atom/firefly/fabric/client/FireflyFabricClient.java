@@ -26,9 +26,14 @@ public class FireflyFabricClient implements ClientModInitializer {
         });
 
         // 3. Enregistrement des commandes (Lumière dynamique ET Particules)
-        // On fait appel à la classe FireflyCommand qu'on a créée tout à l'heure !
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             FireflyCommand.register(dispatcher);
         });
+
+        // 4. Couche de rendu translucide/cutout pour le bocal en verre
+        net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
+                FireflyFabric.FIREFLY_JAR_BLOCK,
+                net.minecraft.client.renderer.RenderType.cutout()
+        );
     }
 }

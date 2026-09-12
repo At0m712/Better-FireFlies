@@ -61,7 +61,8 @@ public class FireflySpawner {
                     || biome.is(BiomeTags.IS_JUNGLE)
                     || biome.is(Biomes.SWAMP)
                     || biome.is(Biomes.MANGROVE_SWAMP)
-                    || biome.is(Biomes.LUSH_CAVES);
+                    || biome.is(Biomes.LUSH_CAVES)
+                    || biome.is(Biomes.CHERRY_GROVE);
         }
 
         if (!isAllowed) return;
@@ -83,6 +84,7 @@ public class FireflySpawner {
                 FireflyEntity firefly = new FireflyEntity(entityType, level);
                 firefly.setPos(finalX, finalY, finalZ);
                 firefly.setId(clientEntityIdCounter--);
+                firefly.setVariant(FireflyVariant.fromBiome(level.getBiome(pos)));
                 level.addEntity(firefly);
             }
         }

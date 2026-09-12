@@ -1,15 +1,25 @@
 package com.atom.firefly.client;
 
+import com.atom.firefly.Constants;
 import com.atom.firefly.config.FireflyConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -18,6 +28,7 @@ public class FireflyEntity extends Entity {
     private int age = 0;
     private final int lifetime;
     private BlockPos homePos = null;
+    private FireflyVariant variant = FireflyVariant.FOREST;
 
     private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
@@ -28,6 +39,14 @@ public class FireflyEntity extends Entity {
         super(type, level);
         this.noPhysics = true;
         this.lifetime = 600 + level.random.nextInt(600);
+    }
+
+    public FireflyVariant getVariant() {
+        return this.variant;
+    }
+
+    public void setVariant(FireflyVariant variant) {
+        this.variant = variant;
     }
 
     private void pickNewTarget() {
@@ -75,6 +94,7 @@ public class FireflyEntity extends Entity {
 
         if (this.homePos == null) {
             this.homePos = this.blockPosition();
+            this.variant = FireflyVariant.fromBiome(this.level().getBiome(this.homePos));
             this.pickNewTarget();
         }
 
@@ -158,6 +178,36 @@ public class FireflyEntity extends Entity {
                     0.0D, 0.0D, 0.0D
             );
         }
+    }
+
+    @Override
+    public InteractionResult interact(Player player, InteractionHand hand) {
+        ItemStack heldItem = player.getItemInHand(hand);
+        if (heldItem.is(Items.GLASS_BOTTLE)) {
+            player.playSound(SoundEvents.BOTTLE_FILL, 1.0F, 1.0F);
+            if (!player.getAbilities().instabuild) {
+                heldItem.shrink(1);
+            }
+            Item jarItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly_jar"))
+                    .orElse(null);
+            if (jarItem != null && jarItem != Items.AIR) {
+                ItemStack jarStack = new ItemStack(jarItem);
+                if (!player.getInventory().add(jarStack)) {
+                    player.drop(jarStack, false);
+                }
+            }
+            if (this.level().isClientSide()) {
+                for (int i = 0; i < 6; i++) {
+                    double px = this.getX() + (this.random.nextDouble() - 0.5D) * 0.25D;
+                    double py = this.getY() + (this.random.nextDouble() - 0.5D) * 0.25D;
+                    double pz = this.getZ() + (this.random.nextDouble() - 0.5D) * 0.25D;
+                    this.level().addParticle(ParticleTypes.GLOW, px, py, pz, 0.0D, 0.0D, 0.0D);
+                }
+            }
+            this.discard();
+            return InteractionResult.SUCCESS;
+        }
+        return super.interact(player, hand);
     }
 
     @Override

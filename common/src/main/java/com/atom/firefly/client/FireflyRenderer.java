@@ -37,9 +37,15 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity, FireflyRender
         super.extractRenderState(entity, state, partialTick);
         state.ageInTicks = entity.tickCount + partialTick;
         state.yRot = Mth.lerp(partialTick, entity.yRotO, entity.getYRot());
-        // Breathing pulse effect: oscillates smoothly between 0.55 and 1.0
-        float pulse = (Mth.sin(state.ageInTicks * 0.15F) + 1.0F) * 0.5F;
-        state.glowAlpha = 0.55F + pulse * 0.45F;
+
+        // Synchronous swarm pulsation: collective breathing rhythm with slight organic individual nuance
+        float worldTime = entity.level().getGameTime() + partialTick;
+        float individualOffset = (Math.abs(entity.getId()) % 8) * 0.18F;
+        float swarmPulse = Mth.sin(worldTime * 0.12F + individualOffset);
+        state.glowAlpha = 0.45F + (swarmPulse + 1.0F) * 0.5F * 0.55F;
+
+        // Biome-specific bioluminescent color
+        state.glowRgb = entity.getVariant().getColorRGB();
     }
 
     public void render(FireflyRenderState state, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
@@ -55,9 +61,9 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity, FireflyRender
         VertexConsumer solidConsumer = buffer.getBuffer(SOLID_RENDER_TYPE);
         this.model.renderToBuffer(poseStack, solidConsumer, packedLight, OverlayTexture.NO_OVERLAY, -1);
 
-        // Render emissive glowing tail with smooth pulsating intensity
+        // Render emissive glowing tail with swarm-pulsing intensity and biome-colored tint
         int alpha = (int) (state.glowAlpha * 255.0F);
-        int glowColor = (alpha << 24) | 0x00FFFFFF;
+        int glowColor = (alpha << 24) | (state.glowRgb & 0x00FFFFFF);
 
         VertexConsumer eyesConsumer = buffer.getBuffer(GLOW_RENDER_TYPE);
         this.model.renderToBuffer(poseStack, eyesConsumer, 15728880, OverlayTexture.NO_OVERLAY, glowColor);
@@ -70,5 +76,6 @@ public class FireflyRenderer extends EntityRenderer<FireflyEntity, FireflyRender
         public float ageInTicks;
         public float yRot;
         public float glowAlpha = 1.0F;
+        public int glowRgb = 0xBAF533;
     }
 }
