@@ -1,13 +1,25 @@
 package com.atom.firefly.client;
 
-import net.minecraft.client.Minecraft;
+import com.atom.firefly.Constants;
+import com.atom.firefly.config.FireflyConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LightBlock;
@@ -17,13 +29,11 @@ import net.minecraft.world.level.storage.ValueOutput;
 
 public class FireflyEntity extends Entity {
 
-    public static boolean enableDynamicLight = true;
-    public static int globalFireflyCount = 0;
-
     private int age = 0;
     private final int lifetime;
-    private BlockPos lastLightPos = null;
     private BlockPos homePos = null;
+    private BlockPos lastLightPos = null;
+    private FireflyVariant variant = FireflyVariant.FOREST;
 
     private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
@@ -34,14 +44,14 @@ public class FireflyEntity extends Entity {
         super(type, level);
         this.noPhysics = true;
         this.lifetime = 600 + level.random.nextInt(600);
-        globalFireflyCount++;
     }
 
-    @Override
-    public void remove(RemovalReason reason) {
-        super.remove(reason);
-        globalFireflyCount--;
-        this.removeLight();
+    public FireflyVariant getVariant() {
+        return this.variant;
+    }
+
+    public void setVariant(FireflyVariant variant) {
+        this.variant = variant;
     }
 
     private void pickNewTarget() {
@@ -54,7 +64,7 @@ public class FireflyEntity extends Entity {
             this.mutablePos.set(proposedX, this.getY() + 2.0, proposedZ);
             boolean foundGround = false;
 
-            for (int j = 0; j < 8; j++) {
+            for (int j = 0; j < 6; j++) {
                 if (!this.level().getBlockState(this.mutablePos).isAir()) {
                     foundGround = true;
                     break;
@@ -64,7 +74,7 @@ public class FireflyEntity extends Entity {
 
             if (foundGround) {
                 double groundY = this.mutablePos.getY() + 1.0;
-                double proposedY = groundY + 0.5 + (this.random.nextDouble() * 3.5);
+                double proposedY = groundY + 0.5 + (this.random.nextDouble() * 3.0);
 
                 this.mutablePos.set(proposedX, proposedY, proposedZ);
                 BlockState targetState = this.level().getBlockState(this.mutablePos);
@@ -79,7 +89,7 @@ public class FireflyEntity extends Entity {
         }
 
         this.targetX = this.homePos.getX();
-        this.targetY = this.getY() - 1.5;
+        this.targetY = this.getY() - 1.0;
         this.targetZ = this.homePos.getZ();
     }
 
@@ -89,6 +99,7 @@ public class FireflyEntity extends Entity {
 
         if (this.homePos == null) {
             this.homePos = this.blockPosition();
+            this.variant = FireflyVariant.fromBiome(this.level().getBiome(this.homePos));
             this.pickNewTarget();
         }
 
@@ -100,13 +111,15 @@ public class FireflyEntity extends Entity {
             return;
         }
 
+        // Despawn safely if no player is nearby (uses Level API, no direct Minecraft.getInstance())
         if (this.age % 40 == 0) {
-            if (Minecraft.getInstance().player != null && this.distanceToSqr(Minecraft.getInstance().player) > 64 * 64) {
+            if (this.level().getNearestPlayer(this, 64.0D) == null) {
                 this.discard();
                 return;
             }
         }
 
+        // Vertical obstacle and water checking
         if (this.age % 4 == 0) {
             if (this.isInWater()) {
                 this.vy += 0.05;
@@ -158,52 +171,100 @@ public class FireflyEntity extends Entity {
         float smoothYaw = Mth.approachDegrees(this.getYRot(), targetYaw, 10.0F);
         this.setYRot(smoothYaw);
 
-        if (enableDynamicLight) {
-            if (this.level() != null && this.level().isClientSide && this.age % 20 == 0) {
-                int currentX = Mth.floor(this.getX());
-                int currentY = Mth.floor(this.getY());
-                int currentZ = Mth.floor(this.getZ());
+        // Ambient dynamic light on the ground and surroundings (controlled by config)
+        if (this.age % 2 == 0) {
+            this.updateDynamicLight();
+        }
 
-                if (this.lastLightPos == null || this.lastLightPos.getX() != currentX || this.lastLightPos.getY() != currentY || this.lastLightPos.getZ() != currentZ) {
-                    this.removeLight();
+        // Ambient glow particle effect (controlled by persistent config)
+        if (FireflyConfig.get().enableParticles && this.level().isClientSide() && this.random.nextFloat() < 0.05F) {
+            double px = this.getX() + (this.random.nextDouble() - 0.5) * 0.1;
+            double py = this.getY() + (this.random.nextDouble() - 0.5) * 0.1 + 0.1;
+            double pz = this.getZ() + (this.random.nextDouble() - 0.5) * 0.1;
 
-                    BlockPos newPos = new BlockPos(currentX, currentY, currentZ);
-                    BlockState currentState = this.level().getBlockState(newPos);
-
-                    if (currentState.isAir()) {
-                        BlockState lightState = Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, 9);
-                        this.level().setBlock(newPos, lightState, 18);
-                        this.lastLightPos = newPos;
-                    }
-                }
-            }
-        } else {
-            this.removeLight();
+            this.level().addParticle(
+                    ParticleTypes.GLOW,
+                    px, py, pz,
+                    0.0D, 0.0D, 0.0D
+            );
         }
     }
 
-    private void removeLight() {
-        if (this.level() != null && this.lastLightPos != null) {
-            BlockState state = this.level().getBlockState(this.lastLightPos);
-            if (state.is(Blocks.LIGHT)) {
-                this.level().setBlock(this.lastLightPos, Blocks.AIR.defaultBlockState(), 18);
+    private void updateDynamicLight() {
+        if (!FireflyConfig.get().enableDynamicLight) {
+            this.clearDynamicLight();
+            return;
+        }
+
+        BlockPos currentPos = this.blockPosition();
+        if (currentPos.equals(this.lastLightPos)) {
+            return;
+        }
+
+        this.clearDynamicLight();
+
+        if (this.level().getBlockState(currentPos).isAir()) {
+            this.level().setBlock(currentPos, Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, 8), 3);
+            this.lastLightPos = currentPos.immutable();
+        }
+    }
+
+    private void clearDynamicLight() {
+        if (this.lastLightPos != null) {
+            if (this.level().getBlockState(this.lastLightPos).is(Blocks.LIGHT)) {
+                this.level().setBlock(this.lastLightPos, Blocks.AIR.defaultBlockState(), 3);
             }
             this.lastLightPos = null;
         }
     }
 
     @Override
-    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
-        return false;
+    public boolean isPickable() {
+        return true;
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {}
+    public void remove(RemovalReason reason) {
+        this.clearDynamicLight();
+        super.remove(reason);
+    }
 
-    // update for 1.21.6
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {}
+    public InteractionResult interact(Player player, InteractionHand hand) {
+        ItemStack heldItem = player.getItemInHand(hand);
+        if (heldItem.is(Items.GLASS_BOTTLE)) {
+            player.playSound(SoundEvents.BOTTLE_FILL, 1.0F, 1.0F);
+            if (!player.getAbilities().instabuild) {
+                heldItem.shrink(1);
+            }
+            Item jarItem = BuiltInRegistries.ITEM.getOptional(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "firefly_jar"))
+                    .orElse(null);
+            if (jarItem != null && jarItem != Items.AIR) {
+                ItemStack jarStack = new ItemStack(jarItem);
+                if (!player.getInventory().add(jarStack)) {
+                    player.drop(jarStack, false);
+                }
+            }
+            if (this.level().isClientSide()) {
+                for (int i = 0; i < 6; i++) {
+                    double px = this.getX() + (this.random.nextDouble() - 0.5D) * 0.25D;
+                    double py = this.getY() + (this.random.nextDouble() - 0.5D) * 0.25D;
+                    double pz = this.getZ() + (this.random.nextDouble() - 0.5D) * 0.25D;
+                    this.level().addParticle(ParticleTypes.GLOW, px, py, pz, 0.0D, 0.0D, 0.0D);
+                }
+            }
+            this.discard();
+            return InteractionResult.SUCCESS;
+        }
+        return super.interact(player, hand);
+    }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {}
+    public boolean hurtServer(ServerLevel level, DamageSource damageSource, float amount) {
+        return false;
+    }
+
+    @Override protected void defineSynchedData(SynchedEntityData.Builder builder) {}
+    @Override protected void readAdditionalSaveData(ValueInput input) {}
+    @Override protected void addAdditionalSaveData(ValueOutput output) {}
 }
